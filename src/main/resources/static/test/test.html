@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebRTC Example</title>
+</head>
+<body>
+<video id="localVideo" autoplay playsinline muted></video>
+<video id="remoteVideo" autoplay playsinline></video>
+
+<button onclick="startCall()">Start Call</button>
+<button onclick="endCall()">End Call</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script>
+    let localStream;
+    let peerConnection;
+    const socket = new SockJS("/signaling"); // Change to your Spring Boot WebSocket endpoint
+    const stompClient = Stomp.over(socket);
+
+    function startCall() {
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+                localStream = stream;
+                document.getElementById("localVideo").srcObject = localStream;
+                createPeerConnection();
+            })
+            .catch(error => {
+                console.error("Error accessing media devices:", error);
+            });
+    }
+
+    function createPeerConnection() {
+        const configuration = {
+            iceServers: [
+                { urls: "stun:stun.l.google.com:19302" },
+                // Add more ICE servers here if needed for NAT traversal
+            ],
+        };
+
+        peerConnection = new RTCPeerConnection(configuration);
+
+        localStream.getTracks().forEach(track => {
+            peerConnection.addTrack(track, localStream);
+        });
+
+        peerConnection.onicecandidate = event => {
+            if (event.candidate) {
+                sendMessage("/app/call", { type: "iceCandidate", candidate: event.candidate });
+            }
+        };
+
+        peerConnection.ontrack = event => {
+            // Add the remote track to the remoteVideo element for playback
+            document.getElementById("remoteVideo").srcObject = event.streams[0];
+        };
+    }
+
+    function sendMessage(destination, message) {
+        stompClient.send(destination, {}, JSON.stringify(message));
+    }
+
+    function endCall() {
+        if (peerConnection) {
+            peerConnection.close();
+            peerConnection = null;
+        }
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            localStream = null;
+        }
+        document.getElementById("localVideo").srcObject = null;
+        document.getElementById("remoteVideo").srcObject = null;
+    }
+
+    stompClient.connect({}, frame => {
+        stompClient.subscribe("/topic/call", message => {
+            const signal = JSON.parse(message.body);
+            if (signal.type === "iceCandidate") {
+                peerConnection.addIceCandidate(signal.candidate);
+            }
+        });
+
+        peerConnection.oniceconnectionstatechange = event => {
+            console.log("ICE connection state:", peerConnection.iceConnectionState);
+        };
+    });
+
+
+
+</script>
+</body>
+</html>
