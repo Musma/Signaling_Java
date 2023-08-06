@@ -29,7 +29,7 @@ const connectSocket = async () =>{
     stompClient.connect({}, function () {
         console.log('Connected to WebRTC server');
 
-        stompClient.subscribe(`/topic/iceCandidate/1`, function (candidate) {
+        stompClient.subscribe(`/topic/simple-peer/iceCandidate/1`, function (candidate) {
             callerPeer.signal(JSON.parse(candidate.body));
             console.log(JSON.parse(candidate.body));
         });
@@ -45,7 +45,7 @@ const createPeer = offer => {
     });
 
     callerPeer.on('signal', callerSignal =>{
-        stompClient.send(`/app/offer/1`, {},  JSON.stringify(callerSignal));
+        stompClient.send(`/app/simple-peer/offer/1`, {},  JSON.stringify(callerSignal));
     });
 
     callerPeer.on('data', data =>{
@@ -55,7 +55,14 @@ const createPeer = offer => {
 }
 
 
+document.querySelector('#camStartBtn').addEventListener('click', async () =>{
+    await getLocalStream();
+    await connectSocket();
 
-getLocalStream();
-connectSocket();
+    return '';
+});
+
+
+
+
 

@@ -11,33 +11,33 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class SignalingController {
-//    @MessageMapping("/offer/{roomId}")
-//    @SendTo("/topic/answer/{roomId}")
-//    public String handleOffer(@Payload String offer, @DestinationVariable String roomId) {
-//        return offer;
-//    }
-//
-//    @MessageMapping("/iceCandidate/{roomId}")
-//    @SendTo("/topic/iceCandidate/{roomId}")
-//    public String handleIceCandidate(@Payload String candidate, @DestinationVariable String roomId) {
-//        return candidate;
-//    }
-
-    @MessageMapping("/offer/{roomId}")
-    @SendTo("/topic/offer/{roomId}")
-    public String handleOffer(@Payload String offer, @DestinationVariable String roomId) {
+    @MessageMapping("/simple-peer/offer/{roomId}")
+    @SendTo("/topic/simple-peer/answer/{roomId}")
+    public String simplePeerHandleOffer(@Payload String offer, @DestinationVariable String roomId) {
         return offer;
     }
 
-    @MessageMapping("/iceCandidate/{roomId}")
-    @SendTo("/topic/iceCandidate/{roomId}")
-    public String handleIceCandidate(@Payload String candidate, @DestinationVariable String roomId) {
+    @MessageMapping("/simple-peer/iceCandidate/{roomId}")
+    @SendTo("/topic/simple-peer/iceCandidate/{roomId}")
+    public String SimplePeerHandleIceCandidate(@Payload String candidate, @DestinationVariable String roomId) {
         return candidate;
     }
 
-    @MessageMapping("/answer/{roomId}")
-    @SendTo("/topic/answer/{roomId}")
-    public String handleAnswer(@Payload String answer, @DestinationVariable String roomId){
+    @MessageMapping("/peer/offer/{roomId}")
+    @SendTo("/topic/peer/offer/{roomId}")
+    public String PeerHandleOffer(@Payload String offer, @DestinationVariable String roomId) {
+        return offer;
+    }
+
+    @MessageMapping("/peer/iceCandidate/{roomId}")
+    @SendTo("/topic/peer/iceCandidate/{roomId}")
+    public String PeerHandleIceCandidate(@Payload String candidate, @DestinationVariable String roomId) {
+        return candidate;
+    }
+
+    @MessageMapping("/peer/answer/{roomId}")
+    @SendTo("/topic/peer/answer/{roomId}")
+    public String PeerHandleAnswer(@Payload String answer, @DestinationVariable String roomId){
         return answer;
     }
 

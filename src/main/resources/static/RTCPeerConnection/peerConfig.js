@@ -41,17 +41,17 @@ const connectSocket = async () =>{
 
         console.log('Connected to WebRTC server');
         
-        stompClient.subscribe(`/topic/iceCandidate/1`, candidate => {
+        stompClient.subscribe(`/topic/peer/iceCandidate/1`, candidate => {
             pc.addIceCandidate(new RTCIceCandidate(JSON.parse(candidate.body)));
         });
 
-        stompClient.subscribe(`/topic/offer/1`, offer => {
+        stompClient.subscribe(`/topic/peer/offer/1`, offer => {
             createPeerConnection();
             pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(offer.body)));
             sendAnswer();
         });
 
-        stompClient.subscribe(`/topic/answer/1`, answer =>{
+        stompClient.subscribe(`/topic/peer/answer/1`, answer =>{
             pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(answer.body)));
         });
 
@@ -61,7 +61,7 @@ const connectSocket = async () =>{
 let onIceCandidate = (event) => {
     if (event.candidate) {
         console.log('ICE candidate');
-        stompClient.send(`/app/iceCandidate/1`,{}, JSON.stringify(event.candidate));
+        stompClient.send(`/app/peer/iceCandidate/1`,{}, JSON.stringify(event.candidate));
     }
 };
 
@@ -89,7 +89,7 @@ let onTrack = (event) => {
 let sendOffer = () => {
     console.log('Send offer');
     pc.createOffer().then(offer =>{
-        stompClient.send('/app/offer/1', {}, JSON.stringify(offer));
+        stompClient.send('/app/peer/offer/1', {}, JSON.stringify(offer));
         return pc.setLocalDescription(offer);
     });
 };
@@ -97,7 +97,7 @@ let sendOffer = () => {
 let sendAnswer = () => {
     console.log('Send answer');
     pc.createAnswer().then( answer => {
-        stompClient.send('/app/answer/1', {}, JSON.stringify(answer));
+        stompClient.send('/app/peer/answer/1', {}, JSON.stringify(answer));
         return pc.setLocalDescription(answer)
     });
 };
