@@ -1,20 +1,16 @@
 
 let stompClient;
-let callerPeer;
+let callerPeerMap = new Map();
+let localSteam;
 
 const getLocalStream = () => {
     navigator.mediaDevices.getUserMedia({ audio: true, video: true })
         .then((stream) => {
             const localStreamElement = document.querySelector("#testVideo");
-            console.log('Stream found');
-            console.log(localStreamElement);
-            // Disable the microphone by default
             stream.getAudioTracks()[0].enabled = false;
-            localStreamElement.srcObject = stream;
-            createPeer(stream);
-            console.log(stream);
+            localSteam = stream;
+            localStreamElement.srcObject = localSteam;
 
-            // Connect after making sure that local stream is availble
         })
         .catch(error => {
             console.error('Stream not found: ', error);
@@ -23,43 +19,55 @@ const getLocalStream = () => {
 
 const connectSocket = async () =>{
     const socket = new SockJS('/signaling');
+    const key = Math.random().toString(36).substring(2, 11);
     stompClient = Stomp.over(socket);
     stompClient.debug = null;
 
+
     stompClient.connect({}, function () {
         console.log('Connected to WebRTC server');
+        callerPeerMap.set(key,createMainPeer(localSteam,key));
 
         stompClient.subscribe(`/topic/simple-peer/iceCandidate/1`, function (candidate) {
-            callerPeer.signal(JSON.parse(candidate.body));
-            console.log(JSON.parse(candidate.body));
+            callerPeerMap.get(JSON.parse(candidate.body).key).signal(JSON.parse(candidate.body).peer);
         });
     });
 
 
 }
 
-const createPeer = offer => {
-    callerPeer = new SimplePeer({
+const createMainPeer = (stream, key) => {
+    const newPeer = new SimplePeer({
         initiator : true,
-        stream : offer
+        stream : stream
     });
 
-    callerPeer.on('signal', callerSignal =>{
-        stompClient.send(`/app/simple-peer/offer/1`, {},  JSON.stringify(callerSignal));
+    newPeer.on('signal', callerSignal =>{
+        stompClient.send(`/app/simple-peer/offer/1`, {},  JSON.stringify({'key' : key , 'peer' : JSON.stringify(callerSignal)}));
     });
 
-    callerPeer.on('data', data =>{
-        console.log(data);
-    });
+
+    return newPeer;
 
 }
 
 
 document.querySelector('#camStartBtn').addEventListener('click', async () =>{
     await getLocalStream();
-    await connectSocket();
 
-    return '';
+});
+
+document.querySelector('#streamStartBtn').addEventListener('click', async () =>{
+
+    console.log(stompClient);
+    if(stompClient === undefined){
+        await connectSocket();
+    }
+    else{
+        const key = Math.random().toString(36).substring(2, 11);
+        callerPeerMap.set(key , createMainPeer(localSteam,key));
+    }
+
 });
 
 
