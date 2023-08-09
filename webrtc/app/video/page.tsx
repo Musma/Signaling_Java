@@ -75,7 +75,7 @@ const Page = () => {
         socket.publish({
           destination: `/pub/room/${roomId}`,
           body: JSON.stringify({
-            type: "CANDIDATE",
+            type: "candidate",
             roomId: roomId,
             from: user,
             candidate: e.candidate,
@@ -153,20 +153,12 @@ const Page = () => {
 
     // 소켓 연결시 실행
     client.current.connect({}, () => {
-      client.current!.publish({
-        destination: `/pub/room/${roomId}`,
-        body: JSON.stringify({
-          type: "JOIN",
-          roomId: roomId,
-          from: user,
-        }),
-      });
       client.current!.subscribe(`/sub/room/${roomId}`, async ({ body }) => {
         const content = JSON.parse(body);
         console.log("content", content);
         console.log("TYPE: " + content.type);
         switch (content.type) {
-          case "ALL_USERS":
+          case "join":
             const len = content.allUsers.length;
             const allUsers = content.allUsers;
             if (user !== content.from) {
@@ -211,7 +203,7 @@ const Page = () => {
                       client.current!.publish({
                         destination: `/pub/room/${roomId}`,
                         body: JSON.stringify({
-                          type: "OFFER",
+                          type: "offer",
                           roomId: roomId,
                           from: user,
                           sdp: sdp,
@@ -223,7 +215,7 @@ const Page = () => {
               }
             }
             break;
-          case "OFFER":
+          case "offer":
             if (user == content.from) {
               break;
             }
@@ -278,7 +270,7 @@ const Page = () => {
             }
 
             break;
-          case "ANSWER":
+          case "answer":
             if (user == content.from) {
               break;
             }
@@ -294,7 +286,7 @@ const Page = () => {
               );
             }
             break;
-          case "CANDIDATE":
+          case "candidate":
             console.log("GET ICE CANDIDATE: ", content.candidate);
             while (!hasPcs[content.from]) {
               if (stop) return;
@@ -312,6 +304,14 @@ const Page = () => {
 
             break;
         }
+      });
+      client.current!.publish({
+        destination: `/pub/room/${roomId}`,
+        body: JSON.stringify({
+          type: "join",
+          roomId: roomId,
+          from: user,
+        }),
       });
     });
     return () => {

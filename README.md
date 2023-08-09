@@ -1,6 +1,7 @@
-Singling_Java
+Singling_Java_conny
 ===============
 ***
+Simple-peer를 사용하지 않은 버전입니다.<br>
 이 프로젝트는 WebRTC 시그널링 서버를 테스트하기 위해 만들어진 프로젝트입니다.<br>
 ***
 <br>
@@ -29,10 +30,9 @@ dependencies {
 프론트
 ---
 ***
-html + javascript
+Nextjs + typescript (webrtc 폴더에 위치)
 
 자바스크립트 사용 라이브러리<br>
-simple-peer :  9.8.0 [깃허브 링크](https://github.com/feross/simple-peer)<br>
 sockjs : 1.5.1 [깃허브 링크](https://github.com/sockjs/sockjs-client)<br>
 stompjs : 2.3.3 [깃허브 링크](https://github.com/stomp-js/stompjs)
 ***
@@ -40,11 +40,113 @@ stompjs : 2.3.3 [깃허브 링크](https://github.com/stomp-js/stompjs)
 간단 사용 방법
 ---
 ***
-1. http://localhost:8080/simple-peer/index.html 로 들어간다.
-2. 임의의 룸번호를 입력해준다.
-3. http://localhost:8080/simple-peer/cam.html 로 들어간다
-4. 위에서 입력한 룸번호를 입력해준다.
-5. index 페이지에서 cam open 버튼을 클릭하여 웹캠을 활성화 해준다.
-6. index 페이지에서 start Stream 버튼을 클릭해준다.
-7. cam.html 에서 index.html 웹캠이 재대로 나온다면 완료!
+1. project/webrtc 경로에서 `npm run dev`
+2. http://localhost/video 에 다중연결 webRTC 구현
+3. userID는 uuid로 생성
+4. roomId는 roomA로 고정되어 있음
 ***
+
+## API 명세
+
+- message data type
+```json
+{
+    "type": "join",
+    "roomId": "roomId",
+    "from": "user",
+    "candidate": "candidate",
+    "sdp": "sdp",
+    "allUsers": ["userA","userB"]
+}
+```
+- type: "join","offer","answer","candidate"
+- roomId: 접속한 룸
+- from: 보낸 유저
+- sdp: offer, answer
+- candidate: ice candidate
+- allUsers: 나를 제외한 현재 룸에 참가한 유저 리스트
+
+## 시나리오
+- userA, userB, roomA
+- roomA에 userA와 userB가 접속
+1. userA pub/room/roomA
+```json
+{
+    "type": "join",
+    "roomId": "roomA",
+    "from": "userA"
+}
+```
+1.1 현재 roomA에 아무도 없기에 방 생성
+2. userB pub/room/roomA
+```json
+{
+    "type": "join",
+    "roomId": "roomA",
+    "from": "userB"
+}
+```
+2.1 roomA에 userA가 존재하기에 방 참가
+2.2 sub/room/roomA
+```json
+{
+    "type": "join",
+    "roomId": "roomA",
+    "from": "userB",
+    "allUsers":["userA"]
+}
+```
+3. userB offer 생성 및 전송
+3.1 pub/room/roomA
+```json
+{
+    "type": "offer",
+    "roomId": "roomA",
+    "from": "userB",
+    "sdp": {}
+}
+```
+3.2 userA sub/room/roomA offer 받음
+```json
+{
+    "type": "offer",
+    "roomId": "roomA",
+    "from": "userB",
+    "sdp": {}
+}
+```
+4. userA pub/room/roomA answer 전송
+```json
+{
+"type": "answer",
+"roomId": "roomA",
+"from": "userA",
+"sdp": {}
+}
+```
+4.1 userB sub/room/roomA answer 받음
+```json
+{
+"type": "answer",
+"roomId": "roomA",
+"from": "userA",
+"sdp": {}
+}
+```
+5. ice candidate 교환
+```json
+{
+"type": "candidate",
+"roomId": "roomA",
+"from": "userA",
+"candidate": {}
+}
+```
+```json
+{
+"type": "candidate",
+"roomId": "roomA",
+"from": "userB",
+"candidate": {}
+}
+```

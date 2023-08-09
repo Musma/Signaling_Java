@@ -23,15 +23,15 @@ public class SignalingController {
 
     // message types, used in signalling:
     // SDP Offer message
-    private static final String MSG_TYPE_OFFER = "OFFER";
+    private static final String MSG_TYPE_OFFER = "offer";
     // SDP Answer message
-    private static final String MSG_TYPE_ANSWER = "ANSWER";
+    private static final String MSG_TYPE_ANSWER = "answer";
     // join room data message
-    private static final String MSG_TYPE_JOIN = "JOIN";
+    private static final String MSG_TYPE_JOIN = "join";
     // leave room data message
     private static final String MSG_TYPE_LEAVE = "leave";
     // New ICE Candidate message
-    private static final String MSG_TYPE_CANDIDATE = "CANDIDATE";
+    private static final String MSG_TYPE_CANDIDATE = "candidate";
 
     @MessageMapping("/room/{roomId}")
     @SendTo("/sub/room/{roomId}")
@@ -54,7 +54,7 @@ public class SignalingController {
                 }
                 List<String> exceptMeUsers = rooms.get(roomId).stream().filter(s -> !s.equals(message.getFrom())).toList();
                 webSocketMessage = SocketMessage.builder()
-                        .type("ALL_USERS")
+                        .type(message.getType())
                         .from(message.getFrom())
                         .roomId(roomId)
                         .allUsers(exceptMeUsers)

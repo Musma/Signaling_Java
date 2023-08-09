@@ -78,9 +78,6 @@ const Page = () => {
             });
         });
     }, []);
-    console.log("--------------------------------");
-    console.log(chat);
-    console.log("--------------------------------");
     return (
         <div>
             <div>Chat</div>
