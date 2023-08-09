@@ -2,6 +2,9 @@
 let stompClient;
 let callerPeerMap = new Map();
 let localSteam;
+let camKeyArr = [];
+
+
 
 const getLocalStream = () => {
     navigator.mediaDevices.getUserMedia({ audio: true, video: true })
@@ -15,6 +18,7 @@ const getLocalStream = () => {
         .catch(error => {
             console.error('Stream not found: ', error);
         });
+
 }
 
 const connectSocket = async () =>{
@@ -26,24 +30,31 @@ const connectSocket = async () =>{
 
     stompClient.connect({}, function () {
         console.log('Connected to WebRTC server');
-        callerPeerMap.set(key,createMainPeer(localSteam,key));
+        // callerPeerMap.set(key,createMainPeer(localSteam,key));
 
         stompClient.subscribe(`/topic/simple-peer/iceCandidate/1`, function (candidate) {
-            callerPeerMap.get(JSON.parse(candidate.body).key).signal(JSON.parse(candidate.body).peer);
+            if(callerPeerMap.has(JSON.parse(candidate.body).key)){
+                callerPeerMap.get(JSON.parse(candidate.body).key).signal(JSON.parse(candidate.body).peer);
+            }
+        });
+
+        stompClient.subscribe(`/topic/simple-peer/getCamId/1`, (camId) =>{
+            camKeyArr.push(camId.body);
         });
     });
 
 
+
 }
 
-const createMainPeer = (stream, key) => {
+const createMainPeer = (stream, key, camKey) => {
     const newPeer = new SimplePeer({
         initiator : true,
         stream : stream
     });
 
     newPeer.on('signal', callerSignal =>{
-        stompClient.send(`/app/simple-peer/offer/1`, {},  JSON.stringify({'key' : key , 'peer' : JSON.stringify(callerSignal)}));
+        stompClient.send(`/app/simple-peer/offer/${camKey}/1`, {},  JSON.stringify({'key' : key , 'peer' : JSON.stringify(callerSignal)}));
     });
 
 
@@ -51,22 +62,19 @@ const createMainPeer = (stream, key) => {
 
 }
 
-
+connectSocket();
 document.querySelector('#camStartBtn').addEventListener('click', async () =>{
     await getLocalStream();
-
 });
 
 document.querySelector('#streamStartBtn').addEventListener('click', async () =>{
 
-    console.log(stompClient);
-    if(stompClient === undefined){
-        await connectSocket();
-    }
-    else{
+    camKeyArr.map((camKey) =>{
         const key = Math.random().toString(36).substring(2, 11);
-        callerPeerMap.set(key , createMainPeer(localSteam,key));
-    }
+        callerPeerMap.set(key , createMainPeer(localSteam,key, camKey));
+    })
+
+
 
 });
 

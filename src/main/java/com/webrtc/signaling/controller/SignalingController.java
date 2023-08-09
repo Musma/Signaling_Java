@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class SignalingController {
-    @MessageMapping("/simple-peer/offer/{roomId}")
-    @SendTo("/topic/simple-peer/answer/{roomId}")
-    public String simplePeerHandleOffer(@Payload String offer, @DestinationVariable String roomId) {
+    @MessageMapping("/simple-peer/offer/{camId}/{roomId}")
+    @SendTo("/topic/simple-peer/answer/{camId}/{roomId}")
+    public String simplePeerHandleOffer(@Payload String offer,
+                                        @DestinationVariable(value = "roomId") String roomId,
+                                        @DestinationVariable(value = "camId") String camId) {
         return offer;
     }
 
@@ -21,6 +23,12 @@ public class SignalingController {
     @SendTo("/topic/simple-peer/iceCandidate/{roomId}")
     public String SimplePeerHandleIceCandidate(@Payload String candidate, @DestinationVariable String roomId) {
         return candidate;
+    }
+
+    @MessageMapping("/simple-peer/getCamId/{roomId}")
+    @SendTo("/topic/simple-peer/getCamId/{roomId}")
+    public String SimplePeerGetCamId(@Payload String body, @DestinationVariable String roomId){
+        return body;
     }
 
     @MessageMapping("/peer/offer/{roomId}")
