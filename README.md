@@ -37,6 +37,25 @@ sockjs : 1.5.1 [깃허브 링크](https://github.com/sockjs/sockjs-client)<br>
 stompjs : 2.3.3 [깃허브 링크](https://github.com/stomp-js/stompjs)
 ***
 
+docker로 실행
+---
+***
+1. gradle build 실행
+```
+gradle build
+```
+2. dockerfile이 있는 곳에서 docker build 실행
+```
+docker build -t signaling-java .
+```
+3. docker run 으로 실행
+```
+docker run -d --rm -p 8080:8080 signaling-java
+```
+4. 완료
+***
+
+
 간단 사용 방법
 ---
 ***
