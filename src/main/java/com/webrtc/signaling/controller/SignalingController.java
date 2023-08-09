@@ -1,6 +1,8 @@
 package com.webrtc.signaling.controller;
 
 import com.webrtc.signaling.dto.SignalingMessage;
+import com.webrtc.signaling.dto.SocketMessage;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -8,57 +10,74 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.socket.WebSocketMessage;
 
-@RestController
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+@Slf4j
+@Controller
 public class SignalingController {
-    @MessageMapping("/simple-peer/offer/{camId}/{roomId}")
-    @SendTo("/topic/simple-peer/answer/{camId}/{roomId}")
-    public String simplePeerHandleOffer(@Payload String offer,
-                                        @DestinationVariable(value = "roomId") String roomId,
-                                        @DestinationVariable(value = "camId") String camId) {
-        return offer;
+    Map<String, List<String>> rooms = new HashMap<String, List<String>>();
+
+    // message types, used in signalling:
+    // SDP Offer message
+    private static final String MSG_TYPE_OFFER = "OFFER";
+    // SDP Answer message
+    private static final String MSG_TYPE_ANSWER = "ANSWER";
+    // join room data message
+    private static final String MSG_TYPE_JOIN = "JOIN";
+    // leave room data message
+    private static final String MSG_TYPE_LEAVE = "leave";
+    // New ICE Candidate message
+    private static final String MSG_TYPE_CANDIDATE = "CANDIDATE";
+
+    @MessageMapping("/room/{roomId}")
+    @SendTo("/sub/room/{roomId}")
+    private SocketMessage joinRoom(@DestinationVariable("roomId") String roomId, @Payload SocketMessage message) {
+        SocketMessage webSocketMessage = null;
+        switch (message.getType()) {
+            case MSG_TYPE_JOIN -> {
+                if (rooms.containsKey(roomId)) {
+                    log.info("join 0 : 방 있음 : {}", roomId);
+                    List<String> users = rooms.get(roomId);
+                    log.info("join 1 : 방({}) 참가 : {}", roomId, message.getFrom());
+                    users.add(message.getFrom());
+                    rooms.put(roomId, users);
+                } else {
+                    log.info("join 0 : 방 생성 : {}", roomId);
+                    ArrayList<String> users = new ArrayList<>();
+                    users.add(message.getFrom());
+                    log.info("join 1 : 방({}) 참가 : {}", roomId, message.getFrom());
+                    rooms.put(roomId, users);
+                }
+                List<String> exceptMeUsers = rooms.get(roomId).stream().filter(s -> !s.equals(message.getFrom())).toList();
+                webSocketMessage = SocketMessage.builder()
+                        .type("ALL_USERS")
+                        .from(message.getFrom())
+                        .roomId(roomId)
+                        .allUsers(exceptMeUsers)
+                        .build();
+            }
+            case MSG_TYPE_OFFER,MSG_TYPE_ANSWER,MSG_TYPE_CANDIDATE -> {
+                log.info("{} : 보내는 사람 : {}", message.getType(), message.getFrom());
+                List<String> exceptMeUsers = rooms.get(roomId).stream().filter(s -> !s.equals(message.getFrom())).toList();
+                webSocketMessage = SocketMessage.builder()
+                        .type(message.getType())
+                        .from(message.getFrom())
+                        .roomId(roomId)
+                        .allUsers(exceptMeUsers)
+                        .candidate(message.getCandidate())
+                        .sdp(message.getSdp())
+                        .build();
+            }
+            default -> {
+                log.info("DEFAULT");
+                log.info("들어온 타입 : {}", message.getType());
+            }
+        }
+        log.info("발송 내용 : {}", webSocketMessage);
+        return webSocketMessage;
     }
-
-    @MessageMapping("/simple-peer/iceCandidate/{roomId}")
-    @SendTo("/topic/simple-peer/iceCandidate/{roomId}")
-    public String SimplePeerHandleIceCandidate(@Payload String candidate, @DestinationVariable String roomId) {
-        return candidate;
-    }
-
-    @MessageMapping("/simple-peer/cam/getCamId/{roomId}")
-    @SendTo("/topic/simple-peer/cam/getCamId/{roomId}")
-    public String SimplePeerCamGetCamId(@Payload String body, @DestinationVariable String roomId){
-        return body;
-    }
-
-    @MessageMapping("/simple-peer/stream/getCamId/{roomId}")
-    @SendTo("/topic/simple-peer/stream/getCamId/{roomId}")
-    public String SimplePeerStreamGetCamId(@Payload String body, @DestinationVariable String roomId){
-        return body;
-    }
-
-
-//    @MessageMapping("/peer/offer/{roomId}")
-//    @SendTo("/topic/peer/offer/{roomId}")
-//    public String PeerHandleOffer(@Payload String offer, @DestinationVariable String roomId) {
-//        return offer;
-//    }
-//
-//    @MessageMapping("/peer/iceCandidate/{roomId}")
-//    @SendTo("/topic/peer/iceCandidate/{roomId}")
-//    public String PeerHandleIceCandidate(@Payload String candidate, @DestinationVariable String roomId) {
-//        return candidate;
-//    }
-//
-//    @MessageMapping("/peer/answer/{roomId}")
-//    @SendTo("/topic/peer/answer/{roomId}")
-//    public String PeerHandleAnswer(@Payload String answer, @DestinationVariable String roomId){
-//        return answer;
-//    }
-//
-//    @MessageMapping("/call")
-//    @SendTo("/topic/call")
-//    public SignalingMessage processCallMessage(@Payload SignalingMessage message) {
-//        return message;
-//    }
 }
