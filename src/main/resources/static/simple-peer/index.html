@@ -9,10 +9,18 @@
 </head>
 <body>
 <!-- 웹 페이지에서 WebRTC 연결과 미디어 스트림 관리를 위한 자바스크립트 코드 -->
+<div>
+    <label for="roomNum">룸 번호 입력 : </label>
+    <input type="number" id="roomNum" />
+    <button type="button" id="roomBtn">룸 입장</button>
+</div>
 
-<video id="testVideo" autoplay playsinline></video>
-<button type="button" id="camStartBtn">cam open</button>
-<button type="button" id="streamStartBtn">start Stream</button>
+<div id="roomVideoDvi" style="display: none;">
+    <video id="testVideo" autoplay playsinline></video>
+    <button type="button" id="camStartBtn">cam open</button>
+    <button type="button" id="streamStartBtn">start Stream</button>
+</div>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/9.8.0/simplepeer.min.js"></script>
 

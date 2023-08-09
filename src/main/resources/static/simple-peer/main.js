@@ -1,4 +1,4 @@
-
+let roomId;
 let stompClient;
 let callerPeerMap = new Map();
 let localSteam;
@@ -27,20 +27,25 @@ const connectSocket = async () =>{
     stompClient = Stomp.over(socket);
     stompClient.debug = null;
 
-
     stompClient.connect({}, function () {
         console.log('Connected to WebRTC server');
         // callerPeerMap.set(key,createMainPeer(localSteam,key));
 
-        stompClient.subscribe(`/topic/simple-peer/iceCandidate/1`, function (candidate) {
+        stompClient.subscribe(`/topic/simple-peer/iceCandidate/${roomId}`, function (candidate) {
             if(callerPeerMap.has(JSON.parse(candidate.body).key)){
                 callerPeerMap.get(JSON.parse(candidate.body).key).signal(JSON.parse(candidate.body).peer);
             }
         });
 
-        stompClient.subscribe(`/topic/simple-peer/getCamId/1`, (camId) =>{
-            camKeyArr.push(camId.body);
+        stompClient.subscribe(`/topic/simple-peer/cam/getCamId/${roomId}`, (camId) =>{
+            const returnCamKey = camId.body;
+            if(camKeyArr.find(camKey => camKey === returnCamKey) === undefined){
+                camKeyArr.push(returnCamKey);
+            }
+
         });
+
+        stompClient.send(`/app/simple-peer/stream/getCamId/1`, {}, {});
     });
 
 
@@ -54,7 +59,7 @@ const createMainPeer = (stream, key, camKey) => {
     });
 
     newPeer.on('signal', callerSignal =>{
-        stompClient.send(`/app/simple-peer/offer/${camKey}/1`, {},  JSON.stringify({'key' : key , 'peer' : JSON.stringify(callerSignal)}));
+        stompClient.send(`/app/simple-peer/offer/${camKey}/${roomId}`, {},  JSON.stringify({'key' : key , 'peer' : JSON.stringify(callerSignal)}));
     });
 
 
@@ -62,20 +67,26 @@ const createMainPeer = (stream, key, camKey) => {
 
 }
 
-connectSocket();
+
 document.querySelector('#camStartBtn').addEventListener('click', async () =>{
     await getLocalStream();
 });
 
 document.querySelector('#streamStartBtn').addEventListener('click', async () =>{
-
     camKeyArr.map((camKey) =>{
         const key = Math.random().toString(36).substring(2, 11);
         callerPeerMap.set(key , createMainPeer(localSteam,key, camKey));
-    })
+    });
+});
 
+document.querySelector('#roomBtn').addEventListener('click', async () =>{
+    roomId = document.querySelector('#roomNum').value;
 
+    document.querySelector('#roomVideoDvi').style.display = 'block';
+    document.querySelector('#roomBtn').disabled = true;
+    document.querySelector('#roomNum').disabled = true;
 
+    await connectSocket();
 });
 
 
