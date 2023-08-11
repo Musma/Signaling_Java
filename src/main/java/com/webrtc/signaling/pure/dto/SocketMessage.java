@@ -1,4 +1,4 @@
-package com.webrtc.signaling.dto;
+package com.webrtc.signaling.pure.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

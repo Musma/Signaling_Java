@@ -1,8 +1,7 @@
-package com.webrtc.signaling.controller;
+package com.webrtc.signaling.pure.controller;
 
-import com.webrtc.signaling.dto.ChatDTO;
-import com.webrtc.signaling.dto.MessageType;
-import com.webrtc.signaling.dto.SocketMessage;
+import com.webrtc.signaling.pure.dto.ChatDTO;
+import com.webrtc.signaling.pure.dto.MessageType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;

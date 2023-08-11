@@ -3,10 +3,20 @@ Singling_Java_conny
 ***
 Simple-peer를 사용하지 않은 버전입니다.<br>
 이 프로젝트는 WebRTC 시그널링 서버를 테스트하기 위해 만들어진 프로젝트입니다.<br>
+기존 webRTC는 pure 패키지에 있습니다. <br/>
+kurento 설정 및 핸들러는 kurento 패키지에 있습니다. <br/>
 ***
 <br>
 
-프로젝트 정보
+# 프로젝트 정보
+- 스캔 범위를 바꿔 테스트하세요
+- kurento 연결시 vm 옵션을 수정해야합니다.!!
+```
+@SpringBootApplication(scanBasePackages = "com.webrtc.signaling.kurento")
+
+# vm 옵션
+-Dkms.url=ws://<KMS IP>:<PORT>/kurento
+```
 --------
 백엔드
 ----
@@ -18,6 +28,13 @@ gradle
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-websocket' // 시그널링 서버 구축을 위한 websocket
+    
+    // kurento
+    // https://mvnrepository.com/artifact/org.kurento/kurento-client
+    implementation 'org.kurento:kurento-client:7.0.0'
+    // https://mvnrepository.com/artifact/org.kurento/kurento-utils-js
+    
+    implementation 'org.kurento:kurento-utils-js:7.0.0'
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
@@ -149,4 +166,48 @@ stompjs : 2.3.3 [깃허브 링크](https://github.com/stomp-js/stompjs)
 "from": "userB",
 "candidate": {}
 }
+```
+
+# kurento 프론트
+## /kurento 에 존재
+- one to many 이기에 하나의 브라우저에서 present 버튼 누르고 다른 브라우저에서 viewer 버튼을 눌러야 합니다.
+- Present click -> peerConnection 생성 및 offer 전송 -> answer 받아 등록 후 ice 전송 -> ice 받아 등록 -> stream을 미디어 서버로 전송
+- Viewer click -> peerConnection 생성 및 offer 전송 -> answer 받아 등록 후 ice 전송 -> ice 받아 등록 -> 미디어 서버에서 peerConnection으로 들어오는 stream 등록
+# kurento media server
+```shell
+## linux
+docker run -d --name kurento --network host \
+    kurento/kurento-media-server:7.0.0
+    
+## mac or windows
+docker run --rm -d \
+    -p 8888:8888/tcp \
+    -p 5000-5050:5000-5050/udp \
+    -e KMS_MIN_PORT=5000 \
+    -e KMS_MAX_PORT=5050 \
+    kurento/kurento-media-server:7.0.0
+```
+
+## spring vm options
+```shell
+-Dkms.url=ws://<KMS IP>:<PORT>/kurento
+```
+
+# coturn
+## turn
+- run 
+```shell
+## mac or windows
+docker run -d -p 3478:3478 -p 3478:3478/udp -p 5349:5349 -p 5349:5349/udp -e LISTENING_PORT=3478 -e REALM=kurento.org -e USER=user -e PASSWORD=s3cr3t --name kurento-coturn kurento/coturn-auth
+
+## linux
+docker run -ti --rm --net=host -e LISTENING_PORT=3478 -e REALM=kurento.org -e USER=user -e PASSWORD=s3cr3t --name kurento-coturn kurento/coturn-auth
+```
+- create user
+```shell
+docker exec -ti coturn turnadmin -a -b /var/local/turndb -u user -r kurento.org -p s3cr3t
+```
+- delete user
+```shell
+docker exec -ti coturn turnadmin -d -b /var/local/turndb -u user -r kurento.org
 ```

@@ -1,16 +1,12 @@
-package com.webrtc.signaling.controller;
+package com.webrtc.signaling.pure.controller;
 
-import com.webrtc.signaling.dto.SignalingMessage;
-import com.webrtc.signaling.dto.SocketMessage;
+import com.webrtc.signaling.pure.dto.SocketMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.socket.WebSocketMessage;
 
 import java.util.ArrayList;
 import java.util.HashMap;

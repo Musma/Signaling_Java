@@ -1,4 +1,4 @@
-package com.webrtc.signaling.dto;
+package com.webrtc.signaling.pure.dto;
 
 public class SignalingMessage {
     private String type;

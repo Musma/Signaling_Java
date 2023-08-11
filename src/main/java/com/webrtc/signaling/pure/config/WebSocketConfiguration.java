@@ -1,4 +1,4 @@
-package com.webrtc.signaling.config;
+package com.webrtc.signaling.pure.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
