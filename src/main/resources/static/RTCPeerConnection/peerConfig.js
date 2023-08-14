@@ -180,6 +180,7 @@ document.querySelector('#enterRoomBtn').addEventListener('click', async () =>{
     }
     roomId = document.querySelector('#roomIdInput').value;
     document.querySelector('#roomIdInput').disabled = true;
+    document.querySelector('#enterRoomBtn').disabled = true;
 
 
 
