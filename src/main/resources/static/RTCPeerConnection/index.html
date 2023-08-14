@@ -11,8 +11,17 @@
 
 </head>
 <body>
-    <video id="remoteStream" autoplay playsinline controls></video>
+<div>
+    <input type="number" id="roomIdInput" />
+    <button type="button" id="camStartBtn">start cam</button>
+    <button type="button" id="startSteamBtn">start Streams</button>
+</div>
+
     <video id="localStream" autoplay playsinline controls></video>
+
+    <div id="remoteStreamDiv">
+    </div>
+
     <script src="peerConfig.js"></script>
 </body>
 </html>

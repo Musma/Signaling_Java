@@ -38,27 +38,36 @@ public class SignalingController {
     }
 
 
-    @MessageMapping("/peer/offer/{roomId}")
-    @SendTo("/topic/peer/offer/{roomId}")
-    public String PeerHandleOffer(@Payload String offer, @DestinationVariable String roomId) {
+    @MessageMapping("/peer/offer/{camKey}/{roomId}")
+    @SendTo("/topic/peer/offer/{camKey}/{roomId}")
+    public String PeerHandleOffer(@Payload String offer, @DestinationVariable(value = "roomId") String roomId,
+                                  @DestinationVariable(value = "camKey") String camKey) {
         return offer;
     }
 
-    @MessageMapping("/peer/iceCandidate/{roomId}")
-    @SendTo("/topic/peer/iceCandidate/{roomId}")
-    public String PeerHandleIceCandidate(@Payload String candidate, @DestinationVariable String roomId) {
+    @MessageMapping("/peer/iceCandidate/{camKey}/{roomId}")
+    @SendTo("/topic/peer/iceCandidate/{camKey}/{roomId}")
+    public String PeerHandleIceCandidate(@Payload String candidate, @DestinationVariable(value = "roomId") String roomId,
+                                         @DestinationVariable(value = "camKey") String camKey) {
         return candidate;
     }
 
-    @MessageMapping("/peer/answer/{roomId}")
-    @SendTo("/topic/peer/answer/{roomId}")
-    public String PeerHandleAnswer(@Payload String answer, @DestinationVariable String roomId){
+    @MessageMapping("/peer/answer/{camKey}/{roomId}")
+    @SendTo("/topic/peer/answer/{camKey}/{roomId}")
+    public String PeerHandleAnswer(@Payload String answer, @DestinationVariable(value = "roomId") String roomId,
+                                   @DestinationVariable(value = "camKey") String camKey){
         return answer;
     }
 
-    @MessageMapping("/call")
-    @SendTo("/topic/call")
-    public SignalingMessage processCallMessage(@Payload SignalingMessage message) {
+    @MessageMapping("/call/key")
+    @SendTo("/topic/call/key")
+    public String callKey(@Payload String message) {
+        return message;
+    }
+
+    @MessageMapping("/send/key")
+    @SendTo("/topic/send/key")
+    public String sendKey(@Payload String message) {
         return message;
     }
 }

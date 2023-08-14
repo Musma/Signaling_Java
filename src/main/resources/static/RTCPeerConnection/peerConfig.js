@@ -1,35 +1,27 @@
-const TURN_SERVER_URL = 'turn:172.30.1.23:9090';
-const TURN_SERVER_USERNAME = 'musma';
-const TURN_SERVER_CREDENTIAL = '0812';
-const myKey = Math.random().toString(36).substring(2, 11);
-
-let pc;
-let remoteStreamElement = document.querySelector('#remoteStream');
+// let remoteStreamElement = document.querySelector('#remoteStream');
 let localStreamElement = document.querySelector('#localStream');
+const myKey = Math.random().toString(36).substring(2, 11);
+let pcListMap = new Map();
+let roomId;
+let otherKeyList = [];
 
-const configuration = {
-    iceServers: [
-        {
-            urls: 'turn:' + TURN_SERVER_URL + '?transport=tcp',
-            username: TURN_SERVER_USERNAME,
-            credential: TURN_SERVER_CREDENTIAL
-        }
-    ]
+
+
+const startCam = () =>{
+    navigator.mediaDevices.getUserMedia({ audio: true, video : true })
+        .then(async (stream) => {
+            console.log('Stream found');
+            localStream = stream;
+            // Disable the microphone by default
+            stream.getAudioTracks()[0].enabled = true;
+            localStreamElement.srcObject = localStream;
+            // Connect after making sure that local stream is availble
+            await connectSocket();
+        }).catch(error => {
+        console.error("Error accessing media devices:", error);
+    });
 }
 
-
-navigator.mediaDevices.getUserMedia({ audio: true, video: true })
-    .then((stream) => {
-        console.log('Stream found');
-        localStream = stream;
-        // Disable the microphone by default
-        stream.getAudioTracks()[0].enabled = false;
-        localStreamElement.srcObject = localStream;
-        // Connect after making sure that local stream is availble
-        connectSocket();
-}).catch(error => {
-    console.error("Error accessing media devices:", error);
-})
 
 const connectSocket = async () =>{
     const socket = new SockJS('/signaling');
@@ -37,68 +29,89 @@ const connectSocket = async () =>{
     stompClient.debug = null;
 
     stompClient.connect({}, function () {
-        createPeerConnection();
-        sendOffer();
-
         console.log('Connected to WebRTC server');
         
-        stompClient.subscribe(`/topic/peer/iceCandidate/1`, candidate => {
+        stompClient.subscribe(`/topic/peer/iceCandidate/${myKey}/${roomId}`, candidate => {
             const key = JSON.parse(candidate.body).key
             const message = JSON.parse(JSON.parse(candidate.body).body);
 
-            if(myKey !== key){
-                pc.addIceCandidate(new RTCIceCandidate({
-                    sdpMLineIndex : message.sdpMLineIndex,
-                    candidate : message.candidate
-                }));
-            }
+            pcListMap.get(key).addIceCandidate(new RTCIceCandidate({
+                sdpMLineIndex : message.sdpMLineIndex,
+                candidate : message.candidate
+            }));
+
 
         });
 
-        stompClient.subscribe(`/topic/peer/offer/1`, offer => {
+        stompClient.subscribe(`/topic/peer/offer/${myKey}/${roomId}`, offer => {
             const key = JSON.parse(offer.body).key;
             const message = JSON.parse(JSON.parse(offer.body).body);
 
-            if(myKey !== key){
-                createPeerConnection();
-                pc.setRemoteDescription(new RTCSessionDescription(message));
-                sendAnswer();
-            }
+            pcListMap.set(key,createPeerConnection(key));
+            pcListMap.get(key).setRemoteDescription(new RTCSessionDescription(message));
+            sendAnswer(pcListMap.get(key), key);
 
         });
 
-        stompClient.subscribe(`/topic/peer/answer/1`, answer =>{
+        stompClient.subscribe(`/topic/peer/answer/${myKey}/${roomId}`, answer =>{
             const key = JSON.parse(answer.body).key;
             const message = JSON.parse(JSON.parse(answer.body).body);
 
-            if(myKey !== key){
-                pc.setRemoteDescription(new RTCSessionDescription(message));
-            }
+            pcListMap.get(key).setRemoteDescription(new RTCSessionDescription(message));
+
 
         });
+
+        stompClient.subscribe(`/topic/call/key`, message =>{
+            stompClient.send(`/app/send/key`, {}, JSON.stringify(myKey));
+
+        });
+
+        stompClient.subscribe(`/topic/send/key`, message => {
+            const key = JSON.parse(message.body);
+
+            if(myKey !== key){
+                otherKeyList.push(key);
+            }
+        });
+
+
 
     });
 }
 
-let onIceCandidate = (event) => {
-    if (event.candidate) {
-        console.log('ICE candidate');
-        stompClient.send(`/app/peer/iceCandidate/1`,{}, JSON.stringify({
-            key : myKey,
-            body : JSON.stringify(event.candidate)
-        }));
+
+let onTrack = (event, otherKey) => {
+
+    if(document.getElementById(`${otherKey}`) === null){
+        const video =  document.createElement('video');
+
+        video.autoplay = true;
+        video.controls = true;
+        video.id = otherKey;
+        video.srcObject = event.streams[0];
+
+
+        document.getElementById('remoteStreamDiv').appendChild(video);
     }
+
+
+    //
+    // remoteStreamElement.srcObject = event.streams[0];
+    // remoteStreamElement.play();
 };
 
-const createPeerConnection = () =>{
+
+
+const createPeerConnection = (otherKey) =>{
+    const pc = new RTCPeerConnection();
     try {
-        pc = new RTCPeerConnection({
-            'iceServers' : [{
-                'urls' : 'stun:stun.1.google.com:19302'
-            }]
+        pc.addEventListener('icecandidate', (event) =>{
+            onIceCandidate(event, otherKey);
         });
-        pc.onicecandidate = onIceCandidate;
-        pc.ontrack = onTrack;
+        pc.addEventListener('track', (event) =>{
+            onTrack(event, otherKey);
+        });
         localStream.getTracks().forEach(track => {
             pc.addTrack(track, localStream);
         });
@@ -107,19 +120,23 @@ const createPeerConnection = () =>{
     } catch (error) {
         console.error('PeerConnection failed: ', error);
     }
+    return pc;
 }
 
-
-let onTrack = (event) => {
-    remoteStreamElement.srcObject = event.streams[0];
-    remoteStreamElement.play();
+let onIceCandidate = (event, otherKey) => {
+    if (event.candidate) {
+        console.log('ICE candidate');
+        stompClient.send(`/app/peer/iceCandidate/${otherKey}/${roomId}`,{}, JSON.stringify({
+            key : myKey,
+            body : JSON.stringify(event.candidate)
+        }));
+    }
 };
 
-
-let sendOffer = () => {
+let sendOffer = (pc ,otherKey) => {
     pc.createOffer().then(offer =>{
-        setLocalAndSendMessage(offer);
-        stompClient.send('/app/peer/offer/1', {}, JSON.stringify({
+        setLocalAndSendMessage(pc, offer);
+        stompClient.send(`/app/peer/offer/${otherKey}/${roomId}`, {}, JSON.stringify({
             key : myKey,
             body : JSON.stringify(offer)
         }));
@@ -127,10 +144,10 @@ let sendOffer = () => {
     });
 };
 
-let sendAnswer = () => {
+let sendAnswer = (pc,otherKey) => {
     pc.createAnswer().then( answer => {
-        setLocalAndSendMessage(answer);
-        stompClient.send('/app/peer/answer/1', {}, JSON.stringify({
+        setLocalAndSendMessage(pc ,answer);
+        stompClient.send(`/app/peer/answer/${otherKey}/${roomId}`, {}, JSON.stringify({
             key : myKey,
             body : JSON.stringify(answer)
         }));
@@ -138,7 +155,29 @@ let sendAnswer = () => {
     });
 };
 
-
-const setLocalAndSendMessage = (sessionDescription) =>{
+const setLocalAndSendMessage = (pc ,sessionDescription) =>{
     pc.setLocalDescription(sessionDescription);
 }
+
+
+//룸 번호 입력 후 캠 + 웹소켓 실행
+document.querySelector('#camStartBtn').addEventListener('click', async () =>{
+    await startCam();
+
+    roomId = document.querySelector('#roomIdInput').value;
+    document.querySelector('#roomIdInput').disabled = true;
+});
+
+// 스트림 버튼 클릭시 , 다른 웹 key들 웹소켓을 가져 온뒤에 offer -> answer -> iceCandidate 통신
+// peer 커넥션은 pcListMap 으로 저장
+document.querySelector('#startSteamBtn').addEventListener('click', async () =>{
+    await stompClient.send(`/app/call/key`, {}, {});
+
+    setTimeout(() =>{
+        otherKeyList.map((key) =>{
+            pcListMap.set(key, createPeerConnection(key));
+            sendOffer(pcListMap.get(key),key);
+        });
+
+    },1000);
+});
