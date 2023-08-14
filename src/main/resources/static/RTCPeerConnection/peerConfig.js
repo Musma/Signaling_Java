@@ -22,7 +22,6 @@ const startCam = async () =>{
             }).catch(error => {
                 console.error("Error accessing media devices:", error);
             });
-        alert('test');
     }
 
 
@@ -171,12 +170,13 @@ const setLocalAndSendMessage = (pc ,sessionDescription) =>{
 
 
 //룸 번호 입력 후 캠 + 웹소켓 실행
-document.querySelector('#camStartBtn').addEventListener('click', async () =>{
+document.querySelector('#enterRoomBtn').addEventListener('click', async () =>{
     await startCam();
 
 
     if(localStream !== undefined){
         document.querySelector('#localStream').style.display = 'block';
+        document.querySelector('#startSteamBtn').style.display = '';
     }
     roomId = document.querySelector('#roomIdInput').value;
     document.querySelector('#roomIdInput').disabled = true;
