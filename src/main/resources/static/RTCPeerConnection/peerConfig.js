@@ -4,22 +4,28 @@ const myKey = Math.random().toString(36).substring(2, 11);
 let pcListMap = new Map();
 let roomId;
 let otherKeyList = [];
+let localStream = undefined;
 
 
 
-const startCam = () =>{
-    navigator.mediaDevices.getUserMedia({ audio: true, video : true })
-        .then(async (stream) => {
-            console.log('Stream found');
-            localStream = stream;
-            // Disable the microphone by default
-            stream.getAudioTracks()[0].enabled = true;
-            localStreamElement.srcObject = localStream;
-            // Connect after making sure that local stream is availble
-            await connectSocket();
-        }).catch(error => {
-        console.error("Error accessing media devices:", error);
-    });
+const startCam = async () =>{
+    if(navigator.mediaDevices !== undefined){
+        await navigator.mediaDevices.getUserMedia({ audio: true, video : true })
+            .then(async (stream) => {
+                console.log('Stream found');
+                localStream = stream;
+                // Disable the microphone by default
+                stream.getAudioTracks()[0].enabled = true;
+                localStreamElement.srcObject = localStream;
+                // Connect after making sure that local stream is availble
+
+            }).catch(error => {
+                console.error("Error accessing media devices:", error);
+            });
+        alert('test');
+    }
+
+
 }
 
 
@@ -70,7 +76,7 @@ const connectSocket = async () =>{
         stompClient.subscribe(`/topic/send/key`, message => {
             const key = JSON.parse(message.body);
 
-            if(myKey !== key){
+            if(myKey !== key && otherKeyList.find((mapKey) => mapKey === myKey) === undefined){
                 otherKeyList.push(key);
             }
         });
@@ -112,9 +118,12 @@ const createPeerConnection = (otherKey) =>{
         pc.addEventListener('track', (event) =>{
             onTrack(event, otherKey);
         });
-        localStream.getTracks().forEach(track => {
-            pc.addTrack(track, localStream);
-        });
+        if(localStream !== undefined){
+            localStream.getTracks().forEach(track => {
+                pc.addTrack(track, localStream);
+            });
+        }
+
 
         console.log('PeerConnection created');
     } catch (error) {
@@ -160,12 +169,21 @@ const setLocalAndSendMessage = (pc ,sessionDescription) =>{
 }
 
 
+
 //룸 번호 입력 후 캠 + 웹소켓 실행
 document.querySelector('#camStartBtn').addEventListener('click', async () =>{
     await startCam();
 
+
+    if(localStream !== undefined){
+        document.querySelector('#localStream').style.display = 'block';
+    }
     roomId = document.querySelector('#roomIdInput').value;
     document.querySelector('#roomIdInput').disabled = true;
+
+
+
+    await connectSocket();
 });
 
 // 스트림 버튼 클릭시 , 다른 웹 key들 웹소켓을 가져 온뒤에 offer -> answer -> iceCandidate 통신
@@ -174,9 +192,14 @@ document.querySelector('#startSteamBtn').addEventListener('click', async () =>{
     await stompClient.send(`/app/call/key`, {}, {});
 
     setTimeout(() =>{
+
+
         otherKeyList.map((key) =>{
-            pcListMap.set(key, createPeerConnection(key));
-            sendOffer(pcListMap.get(key),key);
+            if(!pcListMap.has(key)){
+                pcListMap.set(key, createPeerConnection(key));
+                sendOffer(pcListMap.get(key),key);
+            }
+
         });
 
     },1000);

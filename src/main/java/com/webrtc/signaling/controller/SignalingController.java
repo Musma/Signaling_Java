@@ -70,4 +70,10 @@ public class SignalingController {
     public String sendKey(@Payload String message) {
         return message;
     }
+
+    @MessageMapping("/peer/start/steam")
+    @SendTo("/topic/peer/start/steam")
+    public String peerStartSteam(@Payload String message) {
+        return message;
+    }
 }
