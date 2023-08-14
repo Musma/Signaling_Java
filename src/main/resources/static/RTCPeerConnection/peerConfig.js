@@ -1,6 +1,7 @@
 const TURN_SERVER_URL = 'turn:172.30.1.23:9090';
 const TURN_SERVER_USERNAME = 'musma';
 const TURN_SERVER_CREDENTIAL = '0812';
+const myKey = Math.random().toString(36).substring(2, 11);
 
 let pc;
 let remoteStreamElement = document.querySelector('#remoteStream');
@@ -42,17 +43,38 @@ const connectSocket = async () =>{
         console.log('Connected to WebRTC server');
         
         stompClient.subscribe(`/topic/peer/iceCandidate/1`, candidate => {
-            pc.addIceCandidate(new RTCIceCandidate(JSON.parse(candidate.body)));
+            const key = JSON.parse(candidate.body).key
+            const message = JSON.parse(JSON.parse(candidate.body).body);
+
+            if(myKey !== key){
+                pc.addIceCandidate(new RTCIceCandidate({
+                    sdpMLineIndex : message.sdpMLineIndex,
+                    candidate : message.candidate
+                }));
+            }
+
         });
 
         stompClient.subscribe(`/topic/peer/offer/1`, offer => {
-            createPeerConnection();
-            pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(offer.body)));
-            sendAnswer();
+            const key = JSON.parse(offer.body).key;
+            const message = JSON.parse(JSON.parse(offer.body).body);
+
+            if(myKey !== key){
+                createPeerConnection();
+                pc.setRemoteDescription(new RTCSessionDescription(message));
+                sendAnswer();
+            }
+
         });
 
         stompClient.subscribe(`/topic/peer/answer/1`, answer =>{
-            pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(answer.body)));
+            const key = JSON.parse(answer.body).key;
+            const message = JSON.parse(JSON.parse(answer.body).body);
+
+            if(myKey !== key){
+                pc.setRemoteDescription(new RTCSessionDescription(message));
+            }
+
         });
 
     });
@@ -61,13 +83,20 @@ const connectSocket = async () =>{
 let onIceCandidate = (event) => {
     if (event.candidate) {
         console.log('ICE candidate');
-        stompClient.send(`/app/peer/iceCandidate/1`,{}, JSON.stringify(event.candidate));
+        stompClient.send(`/app/peer/iceCandidate/1`,{}, JSON.stringify({
+            key : myKey,
+            body : JSON.stringify(event.candidate)
+        }));
     }
 };
 
 const createPeerConnection = () =>{
     try {
-        pc = new RTCPeerConnection();
+        pc = new RTCPeerConnection({
+            'iceServers' : [{
+                'urls' : 'stun:stun.1.google.com:19302'
+            }]
+        });
         pc.onicecandidate = onIceCandidate;
         pc.ontrack = onTrack;
         localStream.getTracks().forEach(track => {
@@ -83,21 +112,33 @@ const createPeerConnection = () =>{
 
 let onTrack = (event) => {
     remoteStreamElement.srcObject = event.streams[0];
+    remoteStreamElement.play();
 };
 
 
 let sendOffer = () => {
-    console.log('Send offer');
     pc.createOffer().then(offer =>{
-        stompClient.send('/app/peer/offer/1', {}, JSON.stringify(offer));
-        return pc.setLocalDescription(offer);
+        setLocalAndSendMessage(offer);
+        stompClient.send('/app/peer/offer/1', {}, JSON.stringify({
+            key : myKey,
+            body : JSON.stringify(offer)
+        }));
+        console.log('Send offer');
     });
 };
 
 let sendAnswer = () => {
-    console.log('Send answer');
     pc.createAnswer().then( answer => {
-        stompClient.send('/app/peer/answer/1', {}, JSON.stringify(answer));
-        return pc.setLocalDescription(answer)
+        setLocalAndSendMessage(answer);
+        stompClient.send('/app/peer/answer/1', {}, JSON.stringify({
+            key : myKey,
+            body : JSON.stringify(answer)
+        }));
+        console.log('Send answer');
     });
 };
+
+
+const setLocalAndSendMessage = (sessionDescription) =>{
+    pc.setLocalDescription(sessionDescription);
+}

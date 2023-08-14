@@ -38,27 +38,27 @@ public class SignalingController {
     }
 
 
-//    @MessageMapping("/peer/offer/{roomId}")
-//    @SendTo("/topic/peer/offer/{roomId}")
-//    public String PeerHandleOffer(@Payload String offer, @DestinationVariable String roomId) {
-//        return offer;
-//    }
-//
-//    @MessageMapping("/peer/iceCandidate/{roomId}")
-//    @SendTo("/topic/peer/iceCandidate/{roomId}")
-//    public String PeerHandleIceCandidate(@Payload String candidate, @DestinationVariable String roomId) {
-//        return candidate;
-//    }
-//
-//    @MessageMapping("/peer/answer/{roomId}")
-//    @SendTo("/topic/peer/answer/{roomId}")
-//    public String PeerHandleAnswer(@Payload String answer, @DestinationVariable String roomId){
-//        return answer;
-//    }
-//
-//    @MessageMapping("/call")
-//    @SendTo("/topic/call")
-//    public SignalingMessage processCallMessage(@Payload SignalingMessage message) {
-//        return message;
-//    }
+    @MessageMapping("/peer/offer/{roomId}")
+    @SendTo("/topic/peer/offer/{roomId}")
+    public String PeerHandleOffer(@Payload String offer, @DestinationVariable String roomId) {
+        return offer;
+    }
+
+    @MessageMapping("/peer/iceCandidate/{roomId}")
+    @SendTo("/topic/peer/iceCandidate/{roomId}")
+    public String PeerHandleIceCandidate(@Payload String candidate, @DestinationVariable String roomId) {
+        return candidate;
+    }
+
+    @MessageMapping("/peer/answer/{roomId}")
+    @SendTo("/topic/peer/answer/{roomId}")
+    public String PeerHandleAnswer(@Payload String answer, @DestinationVariable String roomId){
+        return answer;
+    }
+
+    @MessageMapping("/call")
+    @SendTo("/topic/call")
+    public SignalingMessage processCallMessage(@Payload SignalingMessage message) {
+        return message;
+    }
 }
