@@ -50,10 +50,10 @@ const connectSocket = async () =>{
 
         stompClient.subscribe(`/topic/peer/offer/${myKey}/${roomId}`, offer => {
             const key = JSON.parse(offer.body).key;
-            const message = JSON.parse(JSON.parse(offer.body).body);
+            const message = JSON.parse(offer.body).body;
 
             pcListMap.set(key,createPeerConnection(key));
-            pcListMap.get(key).setRemoteDescription(new RTCSessionDescription(message));
+            pcListMap.get(key).setRemoteDescription(new RTCSessionDescription({type:message.type,sdp:message.sdp}));
             sendAnswer(pcListMap.get(key), key);
 
         });

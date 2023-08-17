@@ -1,6 +1,7 @@
 package com.webrtc.signaling.controller;
 
 import com.webrtc.signaling.dto.SignalingMessage;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 public class SignalingController {
     @MessageMapping("/simple-peer/offer/{camId}/{roomId}")
@@ -27,13 +29,13 @@ public class SignalingController {
 
     @MessageMapping("/simple-peer/cam/getCamId/{roomId}")
     @SendTo("/topic/simple-peer/cam/getCamId/{roomId}")
-    public String SimplePeerCamGetCamId(@Payload String body, @DestinationVariable String roomId){
+    public String SimplePeerCamGetCamId(@Payload String body, @DestinationVariable String roomId) {
         return body;
     }
 
     @MessageMapping("/simple-peer/stream/getCamId/{roomId}")
     @SendTo("/topic/simple-peer/stream/getCamId/{roomId}")
-    public String SimplePeerStreamGetCamId(@Payload String body, @DestinationVariable String roomId){
+    public String SimplePeerStreamGetCamId(@Payload String body, @DestinationVariable String roomId) {
         return body;
     }
 
@@ -42,6 +44,7 @@ public class SignalingController {
     @SendTo("/topic/peer/offer/{camKey}/{roomId}")
     public String PeerHandleOffer(@Payload String offer, @DestinationVariable(value = "roomId") String roomId,
                                   @DestinationVariable(value = "camKey") String camKey) {
+        log.info("[OFFER] {} : {}", camKey, offer);
         return offer;
     }
 
@@ -49,19 +52,22 @@ public class SignalingController {
     @SendTo("/topic/peer/iceCandidate/{camKey}/{roomId}")
     public String PeerHandleIceCandidate(@Payload String candidate, @DestinationVariable(value = "roomId") String roomId,
                                          @DestinationVariable(value = "camKey") String camKey) {
+        log.info("[ICECANDIDATE] {} : {}", camKey, candidate);
         return candidate;
     }
 
     @MessageMapping("/peer/answer/{camKey}/{roomId}")
     @SendTo("/topic/peer/answer/{camKey}/{roomId}")
     public String PeerHandleAnswer(@Payload String answer, @DestinationVariable(value = "roomId") String roomId,
-                                   @DestinationVariable(value = "camKey") String camKey){
+                                   @DestinationVariable(value = "camKey") String camKey) {
+        log.info("[ANSWER] {} : {}", camKey, answer);
         return answer;
     }
 
     @MessageMapping("/call/key")
     @SendTo("/topic/call/key")
     public String callKey(@Payload String message) {
+        log.info("[Key] : {}", message);
         return message;
     }
 
