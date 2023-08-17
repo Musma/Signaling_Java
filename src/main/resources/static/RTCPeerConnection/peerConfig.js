@@ -38,12 +38,10 @@ const connectSocket = async () =>{
         
         stompClient.subscribe(`/topic/peer/iceCandidate/${myKey}/${roomId}`, candidate => {
             const key = JSON.parse(candidate.body).key
-            const message = JSON.parse(JSON.parse(candidate.body).body);
+            const message = JSON.parse(candidate.body).body;
 
-            pcListMap.get(key).addIceCandidate(new RTCIceCandidate({
-                sdpMLineIndex : message.sdpMLineIndex,
-                candidate : message.candidate
-            }));
+
+            pcListMap.get(key).addIceCandidate(new RTCIceCandidate({candidate:message.candidate,sdpMLineIndex:message.sdpMLineIndex,sdpMid:message.sdpMid}));
 
 
         });
@@ -60,7 +58,7 @@ const connectSocket = async () =>{
 
         stompClient.subscribe(`/topic/peer/answer/${myKey}/${roomId}`, answer =>{
             const key = JSON.parse(answer.body).key;
-            const message = JSON.parse(JSON.parse(answer.body).body);
+            const message = JSON.parse(answer.body).body;
 
             pcListMap.get(key).setRemoteDescription(new RTCSessionDescription(message));
 
@@ -136,7 +134,7 @@ let onIceCandidate = (event, otherKey) => {
         console.log('ICE candidate');
         stompClient.send(`/app/peer/iceCandidate/${otherKey}/${roomId}`,{}, JSON.stringify({
             key : myKey,
-            body : JSON.stringify(event.candidate)
+            body : event.candidate
         }));
     }
 };
@@ -146,7 +144,7 @@ let sendOffer = (pc ,otherKey) => {
         setLocalAndSendMessage(pc, offer);
         stompClient.send(`/app/peer/offer/${otherKey}/${roomId}`, {}, JSON.stringify({
             key : myKey,
-            body : JSON.stringify(offer)
+            body : offer
         }));
         console.log('Send offer');
     });
@@ -157,7 +155,7 @@ let sendAnswer = (pc,otherKey) => {
         setLocalAndSendMessage(pc ,answer);
         stompClient.send(`/app/peer/answer/${otherKey}/${roomId}`, {}, JSON.stringify({
             key : myKey,
-            body : JSON.stringify(answer)
+            body : answer
         }));
         console.log('Send answer');
     });
