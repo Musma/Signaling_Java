@@ -1,0 +1,14 @@
+version: '3.7'
+services:
+  springboot-smf:
+    image: smf-signaling:v1.0
+    container_name: smf-signaling
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - 9700:9700
+    environment:
+      - TZ=Asia/Seoul
+    restart: always
+    command: ["java","-jar","app.jar"]
