@@ -35,6 +35,7 @@ const connectSocket = async (camKey) =>{
     stompClient = Stomp.over(socket);
     stompClient.debug = null;
 
+    //웹소켓 접속시에 roomId , camKey를 headers 에 보낸다.
     stompClient.connect({
         'roomId' : roomId,
         'camKey' : myKey
@@ -46,10 +47,7 @@ const connectSocket = async (camKey) =>{
         stompClient.subscribe(`/topic/peer/iceCandidate/${myKey}/${roomId}`, candidate => {
             const key = JSON.parse(candidate.body).key
             const message = JSON.parse(candidate.body).body;
-
-
             pcListMap.get(key).addIceCandidate(new RTCIceCandidate({candidate:message.candidate,sdpMLineIndex:message.sdpMLineIndex,sdpMid:message.sdpMid}));
-
 
         });
 
@@ -72,20 +70,6 @@ const connectSocket = async (camKey) =>{
 
         });
 
-        // stompClient.subscribe(`/topic/call/key`, message =>{
-        //     stompClient.send(`/app/send/key`, {}, JSON.stringify(myKey));
-        //
-        // });
-        //
-        // stompClient.subscribe(`/topic/send/key`, message => {
-        //     const key = JSON.parse(message.body);
-        //
-        //     if(myKey !== key && otherKeyList.find((mapKey) => mapKey === myKey) === undefined){
-        //         otherKeyList.push(key);
-        //     }
-        // });
-
-        // await stompClient.send(`/app/call/key`, {}, {});
 
         pcListMap.set(camKey, createPeerConnection(camKey));
         sendOffer(pcListMap.get(camKey),camKey);
@@ -107,10 +91,6 @@ let onTrack = (event, otherKey) => {
         document.getElementById('remoteStreamDiv').appendChild(video);
     }
 
-
-    //
-    // remoteStreamElement.srcObject = event.streams[0];
-    // remoteStreamElement.play();
 };
 
 
@@ -176,15 +156,13 @@ const setLocalAndSendMessage = (pc ,sessionDescription) =>{
 
 
 
-//long polling 대기 후, 신호가 오면 cam 실행 + 웹소켓 시그널링 서버를 이용하여 WebRTC 통신
+// /poll/enter/room/{roomId} long polling api 호출 후, 받은 camKey , roomId를 이용 하여 해당 앱에게 cctv WebRTC 정보를 보냄
 const startPoll = async () =>{
     await startCam();
 
     if(localStream !== undefined){
         document.querySelector('#localStream').style.display = 'block';
     }
-
-
 
     while(true){
         try{
@@ -215,6 +193,9 @@ const startPoll = async () =>{
 }
 
 
+// /poll/leave/room/{roomId} long polling api 를 호출 후 , 해당 room 의 퇴장를 체크하여,
+// 받은 camKey로 pcListMap에 Peer를 제거하고,
+// 인원수 roomCount 를 받아 만약 인원수가 1명이하라면 웹소켓에서 나간다.
 const getRoomCountCheck = async () =>{
     try{
         while (true){

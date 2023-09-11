@@ -4,6 +4,7 @@ import com.webrtc.signaling.config.GlobalVariables;
 import com.webrtc.signaling.dto.CommonResp;
 import com.webrtc.signaling.dto.EnterRoomReq;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +15,9 @@ import java.util.Map;
 
 @RestController
 public class PollingController {
-    private final long timeoutTime = 1L;
+
+    @Value("${long-polling.timout-time}")
+    private long timeoutTime;
 
     @Autowired
     private GlobalVariables globalVariables;
