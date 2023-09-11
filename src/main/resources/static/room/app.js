@@ -137,7 +137,7 @@ const setLocalAndSendMessage = (pc ,sessionDescription) =>{
 document.getElementById("cctv-send").addEventListener('click' , async () =>{
 
     try{
-        const data = await axios.post(`http://localhost:8082/receive-events/enter/room/${roomId}`, {
+        const data = await axios.post(`http://localhost:9700/receive-events/enter/room/${roomId}`, {
             camKey : myKey
         });
 
