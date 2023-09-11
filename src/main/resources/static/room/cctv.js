@@ -166,7 +166,7 @@ const startPoll = async () =>{
 
     while(true){
         try{
-            const body = await axios.get(`http://localhost:9700/poll/enter/room/${roomId}`);
+            const body = await axios.get(`/poll/enter/room/${roomId}`);
 
             const {camKey} = body.data.data;
 
@@ -199,7 +199,7 @@ const startPoll = async () =>{
 const getRoomCountCheck = async () =>{
     try{
         while (true){
-            const resp = await axios.get(`http://localhost:9700/poll/leave/room/${roomId}`);
+            const resp = await axios.get(`/poll/leave/room/${roomId}`);
 
             const {roomCount, camKey} = resp.data.data;
 
