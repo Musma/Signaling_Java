@@ -1,7 +1,7 @@
 Singling_Java
 ===============
 ***
-이 프로젝트는 WebRTC 시그널링 서버를 테스트하기 위해 만들어진 프로젝트입니다.<br>
+이 프로젝트는 안전관리플랫폼 WebRTC 시그널링 서버 입니다. <br>
 ***
 <br>
 
@@ -56,7 +56,8 @@ docker run -d --rm -p 8080:8080 signaling-java
 ***
 
 
-간단 사용 방법
+
+RTCPeerConnection ( 일반 Peer 테스트 ) 간단 사용 방법
 ---
 ***
 1. http://localhost:8080/simple-peer/index.html 로 들어간다.
@@ -66,4 +67,16 @@ docker run -d --rm -p 8080:8080 signaling-java
 5. index 페이지에서 cam open 버튼을 클릭하여 웹캠을 활성화 해준다.
 6. index 페이지에서 start Stream 버튼을 클릭해준다.
 7. cam.html 에서 index.html 웹캠이 재대로 나온다면 완료!
+***
+
+---
+
+room 관리 테스트 페이지 간단 사용 방법
+---
+***
+1. 크롬에서 chrome://flags 페이지에 접속
+2. Insecure origins treated as secure 옵션에서 http://59.20.93.135:9700 ip 추가
+3. http://59.20.93.135:9700/room/cctv.html ( cctv 역활 페이지 ) 를 접속하여 웹캠을 킨다.
+4. http://59.20.93.135:9700/room/app.html ( 앱 역활 페이지 ) 에 들어가 cctv 확인 버튼을 클릭하여 cctv 화면을 불러온다.
+5. 완료!
 ***

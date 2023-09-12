@@ -10,6 +10,8 @@ let socket;
 
 
 
+// startCam
+// 웹캠을 연결하여 Stream 값을 localStream 변수에 넣는다.
 const startCam = async () =>{
     if(navigator.mediaDevices !== undefined){
         await navigator.mediaDevices.getUserMedia({ audio: true, video : true })
@@ -29,7 +31,7 @@ const startCam = async () =>{
 
 }
 
-
+//웹소켓을 연결시킨다.
 const connectSocket = async (camKey) =>{
     socket = new SockJS('/signaling');
     stompClient = Stomp.over(socket);
@@ -43,40 +45,50 @@ const connectSocket = async (camKey) =>{
 
         console.log('Connected to WebRTC server');
 
-
+        // iceCandidate 를 구독 해준다.
         stompClient.subscribe(`/topic/peer/iceCandidate/${myKey}/${roomId}`, candidate => {
             const key = JSON.parse(candidate.body).key
             const message = JSON.parse(candidate.body).body;
+            //해당 신호를 Peer에 추가해준다.
             pcListMap.get(key).addIceCandidate(new RTCIceCandidate({candidate:message.candidate,sdpMLineIndex:message.sdpMLineIndex,sdpMid:message.sdpMid}));
 
         });
 
+        //offer 를 구독 해준다.
         stompClient.subscribe(`/topic/peer/offer/${myKey}/${roomId}`, offer => {
             const key = JSON.parse(offer.body).key;
             const message = JSON.parse(offer.body).body;
 
+            //해당 키에 대한 새로운 peer를 생성하여 map 에 저장한다.
             pcListMap.set(key,createPeerConnection(key));
+            //새로 만든 peer에 RTCSessionDescription를 추가해준다.
             pcListMap.get(key).setRemoteDescription(new RTCSessionDescription({type:message.type,sdp:message.sdp}));
+            //받은 키에 대한 answer를 보낸다.
             sendAnswer(pcListMap.get(key), key);
 
         });
 
+        //answer 를 구독 해준다.
         stompClient.subscribe(`/topic/peer/answer/${myKey}/${roomId}`, answer =>{
             const key = JSON.parse(answer.body).key;
             const message = JSON.parse(answer.body).body;
 
+            //받은 키에 대한 peer에 description 해준다.
             pcListMap.get(key).setRemoteDescription(new RTCSessionDescription(message));
 
 
         });
 
 
+        // 웹소켓이 연결돨떄 해당 camKey 에 대한 peer 를 생성하여 map 에 넣는다.
         pcListMap.set(camKey, createPeerConnection(camKey));
+        //offer 신호를 보낸다.
         sendOffer(pcListMap.get(camKey),camKey);
     });
 }
 
 
+// peer에 stream 값이 들어오면 실행하는 event 함수
 let onTrack = (event, otherKey) => {
 
     if(document.getElementById(`${otherKey}`) === null){
@@ -87,7 +99,6 @@ let onTrack = (event, otherKey) => {
         video.id = otherKey;
         video.srcObject = event.streams[0];
 
-
         document.getElementById('remoteStreamDiv').appendChild(video);
     }
 
@@ -95,6 +106,8 @@ let onTrack = (event, otherKey) => {
 
 
 
+
+// peer 를 생성해주는 함수
 const createPeerConnection = (otherKey) =>{
     const pc = new RTCPeerConnection();
     try {
@@ -118,6 +131,7 @@ const createPeerConnection = (otherKey) =>{
     return pc;
 }
 
+//iceCandidate event 처리 함수
 let onIceCandidate = (event, otherKey) => {
     if (event.candidate) {
         console.log('ICE candidate');
@@ -128,6 +142,7 @@ let onIceCandidate = (event, otherKey) => {
     }
 };
 
+//offer 신호를 보내는 함수
 let sendOffer = (pc ,otherKey) => {
     pc.createOffer().then(offer =>{
         setLocalAndSendMessage(pc, offer);
@@ -139,6 +154,7 @@ let sendOffer = (pc ,otherKey) => {
     });
 };
 
+//anser 신호를 보내는 함수
 let sendAnswer = (pc,otherKey) => {
     pc.createAnswer().then( answer => {
         setLocalAndSendMessage(pc ,answer);
@@ -150,6 +166,7 @@ let sendAnswer = (pc,otherKey) => {
     });
 };
 
+//localDescription 해주는 함수
 const setLocalAndSendMessage = (pc ,sessionDescription) =>{
     pc.setLocalDescription(sessionDescription);
 }
