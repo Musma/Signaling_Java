@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "node-rtsp-stream": "^0.0.9",
+    "ws": "^8.14.1"
+  }
+}

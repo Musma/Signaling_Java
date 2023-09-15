@@ -1,4 +1,5 @@
 // let remoteStreamElement = document.querySelector('#remoteStream');
+let canvas = document.querySelector('#localCanvas');
 let localStreamElement = document.querySelector('#localStream');
 const myKey = Math.random().toString(36).substring(2, 11);
 let pcListMap = new Map();
@@ -13,22 +14,31 @@ let socket;
 // startCam
 // 웹캠을 연결하여 Stream 값을 localStream 변수에 넣는다.
 const startCam = async () =>{
-    if(navigator.mediaDevices !== undefined){
-        await navigator.mediaDevices.getUserMedia({ audio: true, video : true })
-            .then(async (stream) => {
-                console.log('Stream found');
-                localStream = stream;
-                // Disable the microphone by default
-                stream.getAudioTracks()[0].enabled = true;
-                localStreamElement.srcObject = localStream;
-                // Connect after making sure that local stream is availble
+    // 웹소켓 + jsmpeg + canvas tag + video tag
+    var client = new WebSocket('ws://localhost:9999');
+    
+    var player = new jsmpeg(client, {
+        canvas: canvas
+    });
+    
+    var stream = canvas.captureStream(30)
+    localStream = stream
+    localStreamElement.srcObject = localStream;
 
-            }).catch(error => {
-                console.error("Error accessing media devices:", error);
-            });
-    }
+    // if(navigator.mediaDevices !== undefined){
+    //     await navigator.mediaDevices.getUserMedia({ audio: true, video : true })
+    //         .then(async (stream) => {
+    //             console.log('Stream found');
+    //             localStream = stream;
+    //             // Disable the microphone by default
+    //             stream.getAudioTracks()[0].enabled = true;
+    //             localStreamElement.srcObject = localStream;
+    //             // Connect after making sure that local stream is availble
 
-
+    //         }).catch(error => {
+    //             console.error("Error accessing media devices:", error);
+    //         });
+    // }
 }
 
 //웹소켓을 연결시킨다.
