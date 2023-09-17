@@ -27,6 +27,7 @@ public class PollingController {
 
 
     // CCTV 룸 진입 요청 long polling api
+    @CrossOrigin
     @GetMapping("/poll/enter/room/{roomId}")
     public DeferredResult<ResponseEntity<CommonResp>> pollCreateRoom(@PathVariable(name = "roomId") String roomId){
         //DeferredResult 생성, 대기 만료 시간은 1시간으로 지정
@@ -43,6 +44,7 @@ public class PollingController {
     }
 
     // CCTV 룸 진입 요청 receive-events api
+    @CrossOrigin
     @PostMapping("/receive-events/enter/room/{roomId}")
     public void receiveEventCreateRoom(@RequestBody EnterRoomReq enterRoomReq, @PathVariable(name = "roomId") String roomId){
         // 만약 path 의 값의 roomCreateWaitingClient key 값에 있다면 실행
@@ -60,6 +62,7 @@ public class PollingController {
     }
 
     // CCTV 룸 퇴장 처리 long polling api
+    @CrossOrigin
     @GetMapping("/poll/leave/room/{roomId}")
     public DeferredResult<ResponseEntity<CommonResp>> pollcheckRoom(@PathVariable(name = "roomId") String roomId){
         //DeferredResult 생성, 대기 만료 시간은 1시간으로 지정
