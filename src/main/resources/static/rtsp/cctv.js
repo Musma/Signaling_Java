@@ -1,4 +1,5 @@
 // let remoteStreamElement = document.querySelector('#remoteStream');
+const server_url = 'http://59.20.93.135:9700'
 let canvas = document.querySelector('#localCanvas');
 let localStreamElement = document.querySelector('#localStream');
 const myKey = Math.random().toString(36).substring(2, 11);
@@ -23,30 +24,12 @@ const startCam = async () =>{
     var stream = canvas.captureStream(30)
     localStream = stream
     localStreamElement.srcObject = localStream;
-
-
-    canvas.setAttribute("width", window.innerWidth / 2);
-    // canvas.setAttribute("height", window.innerHeight / 2);
-
-    // if(navigator.mediaDevices !== undefined){
-    //     await navigator.mediaDevices.getUserMedia({ audio: true, video : true })
-    //         .then(async (stream) => {
-    //             console.log('Stream found');
-    //             localStream = stream;
-    //             // Disable the microphone by default
-    //             stream.getAudioTracks()[0].enabled = true;
-    //             localStreamElement.srcObject = localStream;
-    //             // Connect after making sure that local stream is availble
-
-    //         }).catch(error => {
-    //             console.error("Error accessing media devices:", error);
-    //         });
-    // }
+    canvas.setAttribute("width", window.innerWidth / 2);  
 }
 
 //웹소켓을 연결시킨다.
 const connectSocket = async (camKey) =>{
-    socket = new SockJS('/signaling');
+    socket = new SockJS(`${server_url}/signaling`);
     stompClient = Stomp.over(socket);
     stompClient.debug = null;
 
@@ -59,7 +42,7 @@ const connectSocket = async (camKey) =>{
         console.log('Connected to WebRTC server');
 
         // iceCandidate 를 구독 해준다.
-        stompClient.subscribe(`/topic/peer/iceCandidate/${myKey}/${roomId}`, candidate => {
+        stompClient.subscribe(`${server_url}/topic/peer/iceCandidate/${myKey}/${roomId}`, candidate => {
             const key = JSON.parse(candidate.body).key
             const message = JSON.parse(candidate.body).body;
             //해당 신호를 Peer에 추가해준다.
@@ -68,7 +51,7 @@ const connectSocket = async (camKey) =>{
         });
 
         //offer 를 구독 해준다.
-        stompClient.subscribe(`/topic/peer/offer/${myKey}/${roomId}`, offer => {
+        stompClient.subscribe(`${server_url}/topic/peer/offer/${myKey}/${roomId}`, offer => {
             const key = JSON.parse(offer.body).key;
             const message = JSON.parse(offer.body).body;
 
@@ -82,7 +65,7 @@ const connectSocket = async (camKey) =>{
         });
 
         //answer 를 구독 해준다.
-        stompClient.subscribe(`/topic/peer/answer/${myKey}/${roomId}`, answer =>{
+        stompClient.subscribe(`${server_url}/topic/peer/answer/${myKey}/${roomId}`, answer =>{
             const key = JSON.parse(answer.body).key;
             const message = JSON.parse(answer.body).body;
 
@@ -148,7 +131,7 @@ const createPeerConnection = (otherKey) =>{
 let onIceCandidate = (event, otherKey) => {
     if (event.candidate) {
         console.log('ICE candidate');
-        stompClient.send(`/app/peer/iceCandidate/${otherKey}/${roomId}`,{}, JSON.stringify({
+        stompClient.send(`${server_url}/app/peer/iceCandidate/${otherKey}/${roomId}`,{}, JSON.stringify({
             key : myKey,
             body : event.candidate
         }));
@@ -159,7 +142,7 @@ let onIceCandidate = (event, otherKey) => {
 let sendOffer = (pc ,otherKey) => {
     pc.createOffer().then(offer =>{
         setLocalAndSendMessage(pc, offer);
-        stompClient.send(`/app/peer/offer/${otherKey}/${roomId}`, {}, JSON.stringify({
+        stompClient.send(`${server_url}/app/peer/offer/${otherKey}/${roomId}`, {}, JSON.stringify({
             key : myKey,
             body : offer
         }));
@@ -171,7 +154,7 @@ let sendOffer = (pc ,otherKey) => {
 let sendAnswer = (pc,otherKey) => {
     pc.createAnswer().then( answer => {
         setLocalAndSendMessage(pc ,answer);
-        stompClient.send(`/app/peer/answer/${otherKey}/${roomId}`, {}, JSON.stringify({
+        stompClient.send(`${server_url}/app/peer/answer/${otherKey}/${roomId}`, {}, JSON.stringify({
             key : myKey,
             body : answer
         }));
@@ -196,7 +179,7 @@ const startPoll = async () =>{
 
     while(true){
         try{
-            const body = await axios.get(`/poll/enter/room/${roomId}`);
+            const body = await axios.get(`${server_url}/poll/enter/room/${roomId}`);
 
             const {camKey} = body.data.data;
 
@@ -229,7 +212,7 @@ const startPoll = async () =>{
 const getRoomCountCheck = async () =>{
     try{
         while (true){
-            const resp = await axios.get(`/poll/leave/room/${roomId}`);
+            const resp = await axios.get(`${server_url}/poll/leave/room/${roomId}`);
 
             const {roomCount, camKey} = resp.data.data;
 
