@@ -1,5 +1,5 @@
 // let remoteStreamElement = document.querySelector('#remoteStream');
-const server_url = 'http://59.20.93.135:9700'
+const server_url = 'http://172.30.0.24:9700'
 let canvas = document.querySelector('#localCanvas');
 let localStreamElement = document.querySelector('#localStream');
 const myKey = Math.random().toString(36).substring(2, 11);
@@ -42,7 +42,7 @@ const connectSocket = async (camKey) =>{
         console.log('Connected to WebRTC server');
 
         // iceCandidate 를 구독 해준다.
-        stompClient.subscribe(`${server_url}/topic/peer/iceCandidate/${myKey}/${roomId}`, candidate => {
+        stompClient.subscribe(`/topic/peer/iceCandidate/${myKey}/${roomId}`, candidate => {
             const key = JSON.parse(candidate.body).key
             const message = JSON.parse(candidate.body).body;
             //해당 신호를 Peer에 추가해준다.
@@ -51,7 +51,7 @@ const connectSocket = async (camKey) =>{
         });
 
         //offer 를 구독 해준다.
-        stompClient.subscribe(`${server_url}/topic/peer/offer/${myKey}/${roomId}`, offer => {
+        stompClient.subscribe(`/topic/peer/offer/${myKey}/${roomId}`, offer => {
             const key = JSON.parse(offer.body).key;
             const message = JSON.parse(offer.body).body;
 
@@ -65,7 +65,7 @@ const connectSocket = async (camKey) =>{
         });
 
         //answer 를 구독 해준다.
-        stompClient.subscribe(`${server_url}/topic/peer/answer/${myKey}/${roomId}`, answer =>{
+        stompClient.subscribe(`/topic/peer/answer/${myKey}/${roomId}`, answer =>{
             const key = JSON.parse(answer.body).key;
             const message = JSON.parse(answer.body).body;
 
@@ -131,7 +131,7 @@ const createPeerConnection = (otherKey) =>{
 let onIceCandidate = (event, otherKey) => {
     if (event.candidate) {
         console.log('ICE candidate');
-        stompClient.send(`${server_url}/app/peer/iceCandidate/${otherKey}/${roomId}`,{}, JSON.stringify({
+        stompClient.send(`/app/peer/iceCandidate/${otherKey}/${roomId}`,{}, JSON.stringify({
             key : myKey,
             body : event.candidate
         }));
@@ -142,7 +142,7 @@ let onIceCandidate = (event, otherKey) => {
 let sendOffer = (pc ,otherKey) => {
     pc.createOffer().then(offer =>{
         setLocalAndSendMessage(pc, offer);
-        stompClient.send(`${server_url}/app/peer/offer/${otherKey}/${roomId}`, {}, JSON.stringify({
+        stompClient.send(`/app/peer/offer/${otherKey}/${roomId}`, {}, JSON.stringify({
             key : myKey,
             body : offer
         }));
@@ -154,7 +154,7 @@ let sendOffer = (pc ,otherKey) => {
 let sendAnswer = (pc,otherKey) => {
     pc.createAnswer().then( answer => {
         setLocalAndSendMessage(pc ,answer);
-        stompClient.send(`${server_url}/app/peer/answer/${otherKey}/${roomId}`, {}, JSON.stringify({
+        stompClient.send(`/app/peer/answer/${otherKey}/${roomId}`, {}, JSON.stringify({
             key : myKey,
             body : answer
         }));

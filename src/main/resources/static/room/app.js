@@ -1,3 +1,4 @@
+const server_url = 'http://172.30.0.24:9700'
 // let remoteStreamElement = document.querySelector('#remoteStream');
 const myKey = Math.random().toString(36).substring(2, 11);
 let pcListMap = new Map();
@@ -8,7 +9,7 @@ let localStream = undefined;
 
 //웹소켓을 연결시킨다.
 const connectSocket = async () =>{
-    const socket = new SockJS('/signaling');
+    const socket = new SockJS(`${server_url}/signaling`);
     stompClient = Stomp.over(socket);
     stompClient.debug = null;
 
@@ -142,7 +143,7 @@ const setLocalAndSendMessage = (pc ,sessionDescription) =>{
 document.getElementById("cctv-send").addEventListener('click' , async () =>{
 
     try{
-        const data = await axios.post(`/receive-events/enter/room/${roomId}`, {
+        const data = await axios.post(`${server_url}/receive-events/enter/room/${roomId}`, {
             camKey : myKey
         });
 
