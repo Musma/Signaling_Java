@@ -10,7 +10,6 @@ let stompClient;
 let socket;
 
 
-
 // startCam
 // 웹캠을 연결하여 Stream 값을 localStream 변수에 넣는다.
 const startCam = async () =>{
@@ -24,6 +23,10 @@ const startCam = async () =>{
     var stream = canvas.captureStream(30)
     localStream = stream
     localStreamElement.srcObject = localStream;
+
+
+    canvas.setAttribute("width", window.innerWidth / 2);
+    // canvas.setAttribute("height", window.innerHeight / 2);
 
     // if(navigator.mediaDevices !== undefined){
     //     await navigator.mediaDevices.getUserMedia({ audio: true, video : true })

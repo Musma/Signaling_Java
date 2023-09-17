@@ -11,7 +11,16 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmpeg/0.1/jsmpg.js"></script>
 
-
+    <style>
+        body {
+          margin: 10;
+        }
+        .canvas {
+          width: 100%;
+          height: 100%;
+          background: #eee;
+        }
+      </style>
 </head>
 <body>
 <!--<div>-->
@@ -20,8 +29,8 @@
 <!--    <button type="button" id="startSteamBtn" style="display: none;">start Streams</button>-->
 <!--</div>-->
 
-<canvas id="localCanvas" ></canvas>
-<video id="localStream" autoplay playsinline controls style="display: none;"></video>
+<canvas id="localCanvas" class="canvas"></canvas>
+<video id="localStream" width="0" height="0" playsinline controls style="display: none; visibility:hidden;"></video>
 
 <div id="remoteStreamDiv">
 </div>

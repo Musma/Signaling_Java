@@ -1,5 +1,4 @@
 // let remoteStreamElement = document.querySelector('#remoteStream');
-let localStreamElement = document.querySelector('#localStream');
 const myKey = Math.random().toString(36).substring(2, 11);
 let pcListMap = new Map();
 let roomId = 1;
@@ -70,6 +69,8 @@ let onTrack = (event, otherKey) => {
         video.controls = true;
         video.id = otherKey;
         video.srcObject = event.streams[0];
+        video.width = window.innerWidth;
+        
 
 
         document.getElementById('cctv-view').appendChild(video);
