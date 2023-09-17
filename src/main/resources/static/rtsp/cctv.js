@@ -1,5 +1,6 @@
 // let remoteStreamElement = document.querySelector('#remoteStream');
-const server_url = 'http://172.30.0.24:9700'
+const server_url = 'http://172.30.1.111:9700'
+// const server_url = 'http://172.30.0.24:9700'
 let canvas = document.querySelector('#localCanvas');
 let localStreamElement = document.querySelector('#localStream');
 const myKey = Math.random().toString(36).substring(2, 11);

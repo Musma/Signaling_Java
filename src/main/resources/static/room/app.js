@@ -1,4 +1,5 @@
-const server_url = 'http://172.30.0.24:9700'
+const server_url = 'http://172.30.1.111:9700'
+// const server_url = 'http://172.30.0.24:9700'
 // let remoteStreamElement = document.querySelector('#remoteStream');
 const myKey = Math.random().toString(36).substring(2, 11);
 let pcListMap = new Map();
