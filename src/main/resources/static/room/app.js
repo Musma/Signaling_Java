@@ -1,5 +1,8 @@
-const server_url = 'http://172.30.1.111:9700'
+// const server_url = ''
+// const server_url = 'http://localhost:9700'
+const server_url = 'http://59.20.93.135:9700'
 // const server_url = 'http://172.30.0.24:9700'
+// const server_url = 'http://172.30.1.111:9700'
 // let remoteStreamElement = document.querySelector('#remoteStream');
 const myKey = Math.random().toString(36).substring(2, 11);
 let pcListMap = new Map();
@@ -12,7 +15,7 @@ let localStream = undefined;
 const connectSocket = async () =>{
     const socket = new SockJS(`${server_url}/signaling`);
     stompClient = Stomp.over(socket);
-    stompClient.debug = null;
+    // stompClient.debug = null;
 
     //웹소켓 접속시에 roomId , camKey를 headers 에 보낸다.
     stompClient.connect({

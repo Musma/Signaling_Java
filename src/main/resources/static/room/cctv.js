@@ -8,7 +8,10 @@ let otherKeyList = [];
 let localStream = undefined;
 let stompClient;
 let socket;
-
+// const server_url = 'http://172.30.1.111:9700'
+const server_url = 'http://59.20.93.135:9700'
+// const server_url = 'http://localhost:9700'
+// const server_url = ''
 
 
 // startCam
@@ -31,7 +34,7 @@ const startCam = async () =>{
 
 //웹소켓을 연결시킨다.
 const connectSocket = async (camKey) =>{
-    socket = new SockJS('/signaling');
+    socket = new SockJS(`${server_url}/signaling`);
     stompClient = Stomp.over(socket);
     stompClient.debug = null;
 
@@ -181,7 +184,7 @@ const startPoll = async () =>{
 
     while(true){
         try{
-            const body = await axios.get(`/poll/enter/room/${roomId}`);
+            const body = await axios.get(`${server_url}/poll/enter/room/${roomId}`);
 
             const {camKey} = body.data.data;
 
@@ -214,7 +217,7 @@ const startPoll = async () =>{
 const getRoomCountCheck = async () =>{
     try{
         while (true){
-            const resp = await axios.get(`/poll/leave/room/${roomId}`);
+            const resp = await axios.get(`${server_url}/poll/leave/room/${roomId}`);
 
             const {roomCount, camKey} = resp.data.data;
 
