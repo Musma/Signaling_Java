@@ -1,6 +1,4 @@
 // let remoteStreamElement = document.querySelector('#remoteStream');
-const server_url = 'http://172.30.1.111:9700'
-// const server_url = 'http://172.30.0.24:9700'
 let canvas = document.querySelector('#localCanvas');
 let localStreamElement = document.querySelector('#localStream');
 const myKey = Math.random().toString(36).substring(2, 11);
@@ -11,6 +9,10 @@ let localStream = undefined;
 let stompClient;
 let socket;
 
+// const server_url = 'http://172.30.1.111:9700'
+const server_url = 'http://59.20.93.135:9700'
+// const server_url = 'http://localhost:9700'
+// const server_url = ''
 
 // startCam
 // 웹캠을 연결하여 Stream 값을 localStream 변수에 넣는다.
