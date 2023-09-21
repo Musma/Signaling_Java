@@ -108,7 +108,13 @@ let onTrack = (event, otherKey) => {
 
 // peer 를 생성해주는 함수
 const createPeerConnection = (otherKey) =>{
-    const pc = new RTCPeerConnection();
+    const pc = new RTCPeerConnection({
+        iceServers: [
+            {
+                urls: 'stun:stun.l.google.com:19302',
+            },
+        ],
+    });
     try {
         pc.addEventListener('icecandidate', (event) =>{
             onIceCandidate(event, otherKey);
