@@ -50,33 +50,31 @@ docker build -t signaling-java .
 ```
 3. docker run 으로 실행
 ```
-docker run -d --rm -p 8080:8080 signaling-java
+docker run -d --rm -p 9700:9700 signaling-java
 ```
 4. 완료
 ***
 
 
 
-RTCPeerConnection ( 일반 Peer 테스트 ) 간단 사용 방법
+RTCPeerConnection ( 일반 Peer 테스트 ) 간단 사용 방법 
 ---
 ***
-1. http://localhost:8080/simple-peer/index.html 로 들어간다.
-2. 임의의 룸번호를 입력해준다.
-3. http://localhost:8080/simple-peer/cam.html 로 들어간다
-4. 위에서 입력한 룸번호를 입력해준다.
-5. index 페이지에서 cam open 버튼을 클릭하여 웹캠을 활성화 해준다.
-6. index 페이지에서 start Stream 버튼을 클릭해준다.
-7. cam.html 에서 index.html 웹캠이 재대로 나온다면 완료!
+해당 코드는 /resources/static/RTCPeerConnection 에 있는 프론트 코드를 기준으로 설명드립니다. <br>
+`index.html`, `peerConfig.js`
+
+1. http://localhost:9700/RTCPeerConnection/index.html 들어간다.
+2. 임의의 룸번호를 입력 후, `enter Room` 버튼을 클릭하여 룸을 만들어준다.
+3. 다른 웹 브라우저를 오픈하여, http://localhost:9700/RTCPeerConnection/index.html 로 들어간다
+4. 위에서 입력한 룸번호를 입력 후, `enter Room` 버튼을 클릭하여 룸에 들어가준다.
+5. `start Streams` 버튼을 클릭하여, 상대쪽에 웹캠 정보를 WebRTC로 보내준다. ( 어느 브라우저를 선택해도 가능 )
+7. 아래에서, 서로의 웹캠이 보인다면 완료!
 ***
 
+외부에서 웹캠 연결 방법
 ---
-
-room 관리 테스트 페이지 간단 사용 방법
----
-***
-1. 크롬에서 chrome://flags 페이지에 접속
-2. Insecure origins treated as secure 옵션에서 http://59.20.93.135:9700 ip 추가
-3. http://59.20.93.135:9700/room/cctv.html ( cctv 역활 페이지 ) 를 접속하여 웹캠을 킨다.
-4. http://59.20.93.135:9700/room/app.html ( 앱 역활 페이지 ) 에 들어가 cctv 확인 버튼을 클릭하여 cctv 화면을 불러온다.
-5. 완료!
+만약, 로컬 환경이 아닌, 외부에서 IP를 입력하여 들어와서 웹캠을 테스트 하고 싶다면 해당 방법을 사용하여, 설정 해줘야 한다.
+1. 크롬 에서 chrome://flags 페이지에 접속
+2. Insecure origins treated as secure 옵션에서 http://{내 아이피}:9700 ip 추가
+3. http://localhost:9700/RTCPeerConnection/index.html 에서 룸 번호 입력 후 웹캠이 열리면 완료
 ***
